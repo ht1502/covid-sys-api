@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="get:\reports:uhub-sys-api-config" doc:id="f6082d1a-e03b-4fbb-98db-20556ad8c832" >
+		<logger level="INFO" doc:name="Logger" doc:id="0f4b7964-f801-4e5f-ae1c-5ddb5e2073cf" message="get Corona Reports Flow Invoked"/>
+		<set-variable value="#[attributes.queryParams.state]" doc:name="Set Variable" doc:id="c0920049-df2b-4692-9c77-437562ebdd5f" variableName="State"/>
+		<db:select doc:name="Select" doc:id="a503fe11-47f9-466c-95ea-c892c4f43323" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from CVD_CASE_MASTER where state =:state]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	state: vars.State
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="76cec6fd-1bea-4ea4-8eb1-108a7ecad449" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<ee:transform doc:name="Transform Message" doc:id="9753c709-05e1-4afe-80ec-2954226c78f0">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[{
+	state: payload.STATE[0],
+	total: sizeOf(payload.CASE_ID),
+	case_type_count: {
+		positive: payload
+  groupBy $.CASE_TYPE
+  mapObject (value, key) -> {
+      (key): sizeOf(value)
+  }
+	}
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise>
+				<raise-error doc:name="Raise error" doc:id="5dee9b24-aa6c-41ab-a56d-47809a798749" type="CUSTOM:STATE_NOT_FOUND"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="77ca4a2d-21a6-4dc0-aa8b-263743c4e279" message="END Flow"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="e8011c6c-a91a-4065-ab7e-ae0aef72e011" type="CUSTOM:STATE_NOT_FOUND">
+				<ee:transform doc:name="Transform Message" doc:id="7744aa32-1b40-427d-8c3b-db20234dd7dd" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"statusCode" : 404,
+	"message" : error.description,
+	"time" : now() as String {format : "yyyy-MM-dd" ++ " " ++ "HH-mm-ss"}
+	
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA["404"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

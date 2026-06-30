@@ -1,0 +1,39 @@
+#%RAML 1.0 Trait
+
+
+responses:
+  
+  400:
+            body:
+              application/json:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 400
+                    required: true 
+                  message:
+                    example: Bad Request
+                    type: string
+                    required: true
+                  description:
+                    example: field validation doesn't meet 
+                    type: string
+                    required: false
+                  dateTime:
+                    example: 2021-05-29T05:58:02Z
+                    type: datetime
+                    required: true
+                  transactionId:
+                    example: 44b32520-61ee-47b4-907d-fa15869f3c4d
+                    type: string
+                    required: true
+                example:
+                      {
+                        "code":400,
+                        "message":"Bad request",
+                        "description":"required key caseType not found",
+                        "dateTime":"2021-05-29T05:58:02Z",
+                        "transactionId":"44b32520-61ee-47b4-907d-fa15869f3c4d"
+                      }
+  

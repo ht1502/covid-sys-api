@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<sub-flow name="select-corona-case-using-nationalId" doc:id="dc17281f-8dc5-41bf-a28e-5d68a06b7351" >
+		<logger level="DEBUG" doc:name="Logger" doc:id="2bf1c1f5-5401-4f59-96f4-44f003c5a903" message='#["Before select DB Call"]' />
+		<db:select doc:name="Select" doc:id="af88bf63-f5f5-4906-abbe-dfbafcb0e31e" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from CVD_CASE_MASTER where national_id =:national_id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	national_id: vars.nationalID
+	}]]]></db:input-parameters>
+		</db:select>
+		<logger level="DEBUG" doc:name="Logger" doc:id="ce823b62-cac4-413f-a2fc-eb79adeeacb3" message='#["Completed select DB Call"]' />
+	</sub-flow>
+	<sub-flow name="insert-corona-case-connector" doc:id="e059c306-9c54-4118-8643-7ce745e7b1ae" >
+		<logger level="DEBUG" doc:name="Logger" doc:id="d9ea9c98-dbe7-4777-950c-fa9fa07dac72" message='#["Before Insert DB Call"]' />
+		<db:insert doc:id="2a880d97-6fb8-45b7-a143-c2ac6d1303b1" config-ref="Database_Config" autoGenerateKeys="true" doc:name="Insert into DB" >
+			<db:sql ><![CDATA[INSERT INTO cvd_case_master (source, case_type, first_name, last_name, phone, email, date_of_birth, national_id, national_id_type, street_address, city, state, postal, country, create_date, update_date, create_by, update_by) VALUES (:source, :case_type, :first_name, :last_name, :phone, :email, :date_of_birth, :national_id, :national_id_type, :street_address, :city, :state, :postal, :country, :create_date, :update_date, :create_by, :update_by)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[vars.covidPayload]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names >
+				<db:auto-generated-keys-column-name value='CASE_ID' />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+		<logger level="DEBUG" doc:name="Logger" doc:id="ee05813b-8b5b-40f6-9aaf-c683dfde1c5e" message='#["Completed Insert DB Call"]' />
+	</sub-flow>
+</mule>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="put:\cases:application\xml:uhub-sys-api-config" doc:id="5601c73b-de81-45ed-9f1d-5af6203729a8" >
+		<logger level="INFO" doc:name="Logger" doc:id="60d4213b-711f-4b30-9dd4-5093ab1f180d" message="Update Flow Invoked"/>
+		<ee:transform doc:name="Transform Message" doc:id="5144770c-ad80-45a0-9d6b-253f68ac5831">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="covidPayload"><![CDATA[%dw 2.0
+output application/java
+---
+{
+	case_id: payload.covidCase.caseID,
+	source: payload.covidCase.source,
+	case_type: payload.covidCase.caseType,
+	first_name: payload.covidCase.firstName,
+	last_name: payload.covidCase.lastName,
+	phone: payload.covidCase.phone,
+	email: payload.covidCase.email,
+	date_of_birth: payload.covidCase.dateOfBirth as Date,
+	national_id: payload.covidCase.nationalID,
+	national_id_type: payload.covidCase.nationalIDType,
+	street_address: payload.covidCase.address.streetAddress,
+	city: payload.covidCase.address.city,
+	state: payload.covidCase.address.state,
+	postal: payload.covidCase.address.postal,
+	country: payload.covidCase.address.country,
+	update_date: now(),
+	create_by: "UHIS",
+	update_by: "UHIS"
+	
+	
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:update doc:name="Update" doc:id="1b32693c-84cd-4e82-8952-db897bb94b1e" config-ref="Database_Config" >
+			<db:sql ><![CDATA[update CVD_CASE_MASTER set source=:source, case_type=:case_type, first_name=:first_name, last_name=:last_name, phone=:phone, email=:email, date_of_birth=:date_of_birth, national_id=:national_id, national_id_type=:national_id_type, street_address=:street_address, city=:city, state=:state, postal=:postal, country=:country, update_date=:update_date, create_by=:create_by, update_by=:update_by where case_id =:case_id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[vars.covidPayload]]]></db:input-parameters>
+		</db:update>
+		<ee:transform doc:name="Transform Message1" doc:id="eaa78e3b-215f-4d30-9c3a-4da5132ebf3a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+---
+if(payload.affectedRows >0) {
+	caseID: vars.covidPayload.case_id
+} else {}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c929ad51-fe6e-4b04-9831-236f3d60bfff" message="END Flow"/>
+	</flow>
+</mule>

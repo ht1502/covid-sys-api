@@ -1,0 +1,84 @@
+#%RAML 1.0
+title: uhub-sys-api
+
+baseUri: http://localhost:8081/corona/v1
+
+securitySchemes:
+  basic: !include /security/basicauth.raml
+  oath2.0: !include /security/oath20.raml
+
+traits: 
+    errorResponses: !include /traits/errorhandling.raml
+    Headers: !include /traits/headers.raml
+    400errorResponse: !include /traits/errorCases.raml
+
+/cases:
+  securedBy: [oath2.0]
+  
+  post:
+    description: This resource used to register a covid case.
+    is: [errorResponses, Headers, 400errorResponse]
+    body:
+      application/json:
+        type: !include /dataTypes/registerCovidCasesRequest.raml
+        example: !include /examples/createCovidCasesRequest.json
+    responses:
+        200:
+           body:
+              application/json:
+                  type: !include /dataTypes/registerCovidCaseResponse.raml
+                  example:
+                    {
+                      "caseID":"672322"
+                    }
+
+        
+  put:
+    description: This resource used to update a covid case.
+    is: [Headers]
+    
+    body:
+      application/xml:
+        type: !include /dataTypes/updateCovidCasesRequest.raml
+        example: !include /examples/updateCovidCasesRequest.xml
+    responses:
+      200:
+        body:
+          application/xml:
+            type: !include /dataTypes/updateCovidCasesResponse.raml
+            example:
+                  <?xml version="1.0" encoding="UTF-8" ?>
+                  <response>
+                    <caseID>7</caseID>
+                  </response>
+      
+/{nationalID}:
+    get:
+      description: To get covid cases by national id
+      securedBy: [oath2.0]
+      is: [errorResponses, Headers]
+      
+      responses:
+        200:
+          body:
+            application/json:
+              type: !include /dataTypes/getCovidCasesbNationalID.raml
+              example: !include /examples/getCovidCasesbyNationalID.json
+                   
+/reports: 
+  description: To get reports by state wise and if state not provided all states reports responded
+  securedBy: [oath2.0]
+  is: [errorResponses, Headers]
+  get:
+
+    queryParameters:
+      state:
+        required: false
+        type: string
+        example: "TX"
+    responses:
+      200:
+        body:
+          application/json:
+            type: !include /dataTypes/getCovidCasesbyStateResponse.raml
+            example: !include /examples/getCovidCasesbyStatus.json

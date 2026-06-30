@@ -1,0 +1,17 @@
+#%RAML 1.0 SecurityScheme
+type: OAuth 2.0
+describedBy:
+  headers:
+    Authorization:
+        description: OAuth 2  Bearer token.
+    type: string
+  responses:
+    401:
+      description: Invalid or expired token
+settings:
+  authorizationUri: https://auth.example.com/authorize
+  accessTokenUri: https://auth.example.com/token
+  authorizationGrants: [ authorization_code, client_credentials ]
+
+    
+  
